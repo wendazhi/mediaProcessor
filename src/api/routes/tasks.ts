@@ -6,7 +6,9 @@ import { config } from "../../config/index.js";
 
 export async function taskRoutes(app: FastifyInstance) {
   app.post("/api/v1/tasks", async (request, reply) => {
-    const data = await request.file();
+    const contentType = request.headers["content-type"] || "";
+    const isMultipart = contentType.startsWith("multipart/form-data");
+    const data = isMultipart ? await request.file() : undefined;
     const body = data ? Object.fromEntries(Object.entries(data.fields || {})) : (request.body as Record<string, unknown>);
 
     const inputUrl = body.input_url as string | undefined;
