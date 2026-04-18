@@ -1,0 +1,42 @@
+{
+  "name": "ai-media-processor",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/api/server.ts",
+    "dev:worker": "tsx watch scripts/start-worker.ts",
+    "build": "tsc",
+    "start": "node dist/api/server.js",
+    "start:worker": "node dist/scripts/start-worker.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "fastify": "^5.0.0",
+    "@fastify/multipart": "^9.0.0",
+    "@fastify/websocket": "^11.0.0",
+    "drizzle-orm": "^0.38.0",
+    "pg": "^8.13.0",
+    "dotenv": "^16.4.0",
+    "zod": "^3.24.0",
+    "axios": "^1.7.0",
+    "cheerio": "^1.0.0",
+    "playwright": "^1.49.0",
+    "sharp": "^0.33.0",
+    "fluent-ffmpeg": "^2.1.3",
+    "@anthropic-ai/sdk": "^0.32.0",
+    "uuid": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
+    "@types/fluent-ffmpeg": "^2.1.27",
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0",
+    "drizzle-kit": "^0.30.0",
+    "vitest": "^2.1.0",
+    "@vitest/coverage-v8": "^2.1.0"
+  }
+}
