@@ -1,0 +1,38 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy to server
+        env:
+          HOST: ${{ secrets.SSH_HOST || '121.43.103.72' }}
+          USER: ${{ secrets.SSH_USER || 'root' }}
+          PATH_DIR: ${{ secrets.DEPLOY_PATH || '/opt/mediaProcessor' }}
+        run: |
+          ssh -o StrictHostKeyChecking=no $USER@$HOST << EOF
+            set -e
+            cd $PATH_DIR || exit 1
+            echo "==> Pulling latest code..."
+            git pull origin main
+            echo "==> Installing dependencies..."
+            npm ci
+            echo "==> Building..."
+            npm run build
+            echo "==> Restarting services..."
+            pm2 restart ecosystem.config.cjs
+            echo "==> Deploy done!"
+            pm2 status
+          EOF
