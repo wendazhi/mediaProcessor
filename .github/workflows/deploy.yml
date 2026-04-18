@@ -20,7 +20,7 @@ jobs:
         env:
           HOST: ${{ secrets.SSH_HOST || '121.43.103.72' }}
           USER: ${{ secrets.SSH_USER || 'root' }}
-          PATH_DIR: ${{ secrets.DEPLOY_PATH || '/opt/mediaProcessor' }}
+          PATH_DIR: ${{ secrets.DEPLOY_PATH || '/data/wwwroot' }}
         run: |
           ssh -o StrictHostKeyChecking=no $USER@$HOST << EOF
             set -e

@@ -9,15 +9,15 @@
 ```bash
 ssh root@121.43.103.72
 
-mkdir -p /opt/mediaProcessor
-cd /opt/mediaProcessor
+mkdir -p /data/wwwroot
+cd /data/wwwroot
 git clone git@github.com:wendazhi/mediaProcessor.git .
 ```
 
 ### 2. 安装依赖并配置环境
 
 ```bash
-cd /opt/mediaProcessor
+cd /data/wwwroot
 npm install
 npm run build
 
@@ -47,7 +47,7 @@ node -v
 createdb media_processor
 
 # 推送表结构
-cd /opt/mediaProcessor
+cd /data/wwwroot
 npm run db:push
 ```
 
@@ -62,7 +62,7 @@ npm run db:push
 | `SSH_PRIVATE_KEY` | 服务器的 SSH 私钥（完整内容） | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
 | `SSH_HOST` | 服务器 IP | `121.43.103.72` |
 | `SSH_USER` | SSH 用户名 | `root` |
-| `DEPLOY_PATH` | 服务器上的代码目录 | `/opt/mediaProcessor` |
+| `DEPLOY_PATH` | 服务器上的代码目录 | `/data/wwwroot` |
 
 ### 如何获取 SSH 私钥
 
@@ -105,7 +105,7 @@ GitHub Actions 会自动：
 ### 服务器实时日志
 ```bash
 ssh root@121.43.103.72
-cd /opt/mediaProcessor
+cd /data/wwwroot
 pm2 logs
 ```
 
@@ -117,7 +117,7 @@ pm2 logs
 
 ```bash
 ssh root@121.43.103.72
-cd /opt/mediaProcessor
+cd /data/wwwroot
 git pull origin main
 npm ci
 npm run build
