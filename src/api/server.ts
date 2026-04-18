@@ -3,6 +3,9 @@ import multipart from "@fastify/multipart";
 import { config } from "../config/index.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { authMiddleware } from "./middleware/auth.js";
+import { taskRoutes } from "./routes/tasks.js";
+import { modelRoutes } from "./routes/models.js";
+import { sseRoutes } from "./routes/sse.js";
 
 export async function buildServer() {
   const app = Fastify({
@@ -18,6 +21,11 @@ export async function buildServer() {
   });
 
   app.addHook("onRequest", authMiddleware);
+
+  // Register routes
+  await app.register(taskRoutes);
+  await app.register(modelRoutes);
+  await app.register(sseRoutes);
 
   return app;
 }
