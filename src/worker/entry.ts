@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { startWorker } from "./worker.js";
 import { initModelAdapters } from "../model/init.js";
 

@@ -78,11 +78,14 @@ export async function failTask(taskId: string, error: string): Promise<void> {
 }
 
 export async function resetStaleTasks(timeoutMinutes: number = 5): Promise<void> {
-  await db.execute(sql`
-    UPDATE ${tasks}
-    SET status = 'pending', updated_at = NOW()
-    WHERE status = 'processing'
-      AND updated_at < NOW() - INTERVAL '${sql.raw(String(timeoutMinutes))} minutes'
-  `);
+  await db
+    .update(tasks)
+    .set({ status: "pending", updatedAt: new Date() })
+    .where(
+      and(
+        eq(tasks.status, "processing"),
+        lte(tasks.updatedAt, sql`NOW() - INTERVAL '${sql.raw(String(timeoutMinutes))} minutes'`)
+      )
+    );
 }
 
