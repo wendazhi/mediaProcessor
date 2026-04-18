@@ -16,27 +16,32 @@ export class VolcanoVisionAdapter implements ModelAdapter {
     const images = Array.isArray(params.content) ? params.content : [params.content];
     const userPrompt = params.prompt || "请详细描述这张图片的内容。";
 
-    const messages: any[] = [
-      {
-        role: "user",
-        content: [
-          { type: "text", text: userPrompt },
-          ...images.map((img) => ({
-            type: "image_url",
-            image_url: {
-              url: `data:image/jpeg;base64,${img}`,
-            },
-          })),
-        ],
-      },
-    ];
+    // Build content array: images + text
+    const content: any[] = [];
+
+    for (const img of images) {
+      // img is base64 string, construct data URI
+      content.push({
+        type: "input_image",
+        image_url: `data:image/jpeg;base64,${img}`,
+      });
+    }
+
+    content.push({
+      type: "input_text",
+      text: userPrompt,
+    });
 
     const response = await axios.post(
-      `${config.volcanoBaseUrl}/chat/completions`,
+      `${config.volcanoBaseUrl}/responses`,
       {
-        model: config.volcanoVisionEndpoint,
-        messages,
-        max_tokens: 4096,
+        model: config.volcanoVisionModel,
+        input: [
+          {
+            role: "user",
+            content,
+          },
+        ],
       },
       {
         headers: {
@@ -47,12 +52,14 @@ export class VolcanoVisionAdapter implements ModelAdapter {
       }
     );
 
-    const text = response.data.choices?.[0]?.message?.content || "";
-    const tokens = response.data.usage?.prompt_tokens || 0;
+    // Extract text from response
+    const output = response.data.output || [];
+    const assistantMsg = output.find((m: any) => m.role === "assistant");
+    const text = assistantMsg?.content?.find((c: any) => c.type === "output_text")?.text || "";
 
     return {
       text,
-      usage: { tokens },
+      usage: { tokens: response.data.usage?.total_tokens || 0 },
     };
   }
 }

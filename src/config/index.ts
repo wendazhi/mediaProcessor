@@ -10,8 +10,8 @@ export const config = {
   geminiApiKey: process.env.GEMINI_API_KEY || "",
   volcanoApiKey: process.env.VOLCANO_API_KEY || "",
   volcanoBaseUrl: process.env.VOLCANO_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3",
-  volcanoVisionEndpoint: process.env.VOLCANO_VISION_ENDPOINT || "",
-  volcanoTextEndpoint: process.env.VOLCANO_TEXT_ENDPOINT || "",
+  volcanoVisionModel: process.env.VOLCANO_VISION_MODEL || "",
+  volcanoTextModel: process.env.VOLCANO_TEXT_MODEL || "",
   workerPollIntervalMs: parseInt(process.env.WORKER_POLL_INTERVAL_MS || "1000"),
   workerMaxConcurrent: parseInt(process.env.WORKER_MAX_CONCURRENT || "5"),
   maxFileSize: 100 * 1024 * 1024, // 100MB

@@ -16,23 +16,21 @@ export class VolcanoTextAdapter implements ModelAdapter {
     const text = Array.isArray(params.content) ? params.content.join("\n") : params.content;
     const userPrompt = params.prompt || "请总结并分析以下内容。";
 
-    const messages = [
-      {
-        role: "system",
-        content: "你是由火山引擎提供的AI助手。",
-      },
-      {
-        role: "user",
-        content: `${userPrompt}\n\n${text}`,
-      },
-    ];
-
     const response = await axios.post(
-      `${config.volcanoBaseUrl}/chat/completions`,
+      `${config.volcanoBaseUrl}/responses`,
       {
-        model: config.volcanoTextEndpoint,
-        messages,
-        max_tokens: 4096,
+        model: config.volcanoTextModel,
+        input: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: `${userPrompt}\n\n${text}`,
+              },
+            ],
+          },
+        ],
       },
       {
         headers: {
@@ -43,12 +41,14 @@ export class VolcanoTextAdapter implements ModelAdapter {
       }
     );
 
-    const resultText = response.data.choices?.[0]?.message?.content || "";
-    const tokens = response.data.usage?.prompt_tokens || 0;
+    // Extract text from response
+    const output = response.data.output || [];
+    const assistantMsg = output.find((m: any) => m.role === "assistant");
+    const resultText = assistantMsg?.content?.find((c: any) => c.type === "output_text")?.text || "";
 
     return {
       text: resultText,
-      usage: { tokens },
+      usage: { tokens: response.data.usage?.total_tokens || 0 },
     };
   }
 }
