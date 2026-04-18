@@ -18,7 +18,7 @@ export class ClaudeVisionAdapter implements ModelAdapter {
     const images = Array.isArray(params.content) ? params.content : [params.content];
     const userPrompt = params.prompt || "Describe this content in detail.";
 
-    const content: Anthropic.Messages.ContentBlockParam[] = [
+    const content: any[] = [
       { type: "text", text: userPrompt },
       ...images.map((img) => ({
         type: "image" as const,

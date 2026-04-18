@@ -1,5 +1,4 @@
 import Fastify from "fastify";
-import multipart from "@fastify/multipart";
 import { config } from "../config/index.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { authMiddleware } from "./middleware/auth.js";
@@ -21,12 +20,6 @@ export async function buildServer() {
   });
 
   app.setErrorHandler(errorHandler);
-  await app.register(multipart, {
-    limits: {
-      fileSize: config.maxFileSize,
-    },
-  });
-
   app.addHook("onRequest", authMiddleware);
 
   // Register routes

@@ -25,7 +25,7 @@ export async function startWorker(): Promise<void> {
 
       try {
         const result = await dispatchTask(task);
-        await completeTask(task.id, result);
+        await completeTask(task.id, result as unknown as Record<string, unknown>);
         await notifyTaskChange(task.id, "completed");
         pushSSE(task.id, "completed", {
           task_id: task.id,

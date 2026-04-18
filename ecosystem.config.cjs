@@ -1,0 +1,58 @@
+require("dotenv").config();
+
+const env = {
+  NODE_ENV: "production",
+  PORT: process.env.PORT || "3000",
+  API_KEY: process.env.API_KEY || "",
+  DATABASE_URL: process.env.DATABASE_URL || "",
+  ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || "",
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY || "",
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY || "",
+  VOLCANO_API_KEY: process.env.VOLCANO_API_KEY || "",
+  VOLCANO_BASE_URL: process.env.VOLCANO_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3",
+  VOLCANO_VISION_MODEL: process.env.VOLCANO_VISION_MODEL || "",
+  VOLCANO_TEXT_MODEL: process.env.VOLCANO_TEXT_MODEL || "",
+  WORKER_POLL_INTERVAL_MS: process.env.WORKER_POLL_INTERVAL_MS || "1000",
+  WORKER_MAX_CONCURRENT: process.env.WORKER_MAX_CONCURRENT || "5",
+};
+
+module.exports = {
+  apps: [
+    {
+      name: "media-api",
+      script: "./dist/index.js",
+      cwd: __dirname,
+      instances: 1,
+      exec_mode: "fork",
+      env,
+      log_file: "./logs/api-combined.log",
+      out_file: "./logs/api-out.log",
+      error_file: "./logs/api-error.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+      merge_logs: true,
+      max_memory_restart: "512M",
+      restart_delay: 3000,
+      max_restarts: 5,
+      min_uptime: "10s",
+      watch: false,
+    },
+    {
+      name: "media-worker",
+      script: "./dist/worker/entry.js",
+      cwd: __dirname,
+      instances: 2,
+      exec_mode: "cluster",
+      env,
+      log_file: "./logs/worker-combined.log",
+      out_file: "./logs/worker-out.log",
+      error_file: "./logs/worker-error.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+      merge_logs: true,
+      max_memory_restart: "1G",
+      restart_delay: 5000,
+      max_restarts: 5,
+      min_uptime: "10s",
+      watch: false,
+    },
+  ],
+};

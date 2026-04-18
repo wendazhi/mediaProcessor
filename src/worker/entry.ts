@@ -1,5 +1,5 @@
-import { startWorker } from "../src/worker/worker.js";
-import { initModelAdapters } from "../src/model/init.js";
+import { startWorker } from "./worker.js";
+import { initModelAdapters } from "../model/init.js";
 
 initModelAdapters();
 

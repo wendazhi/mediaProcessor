@@ -6,10 +6,7 @@ import { config } from "../../config/index.js";
 
 export async function taskRoutes(app: FastifyInstance) {
   app.post("/api/v1/tasks", async (request, reply) => {
-    const contentType = request.headers["content-type"] || "";
-    const isMultipart = contentType.startsWith("multipart/form-data");
-    const data = isMultipart ? await request.file() : undefined;
-    const body = data ? Object.fromEntries(Object.entries(data.fields || {})) : (request.body as Record<string, unknown>);
+    const body = request.body as Record<string, unknown>;
 
     const inputUrl = body.input_url as string | undefined;
     const inputType = body.input_type as string | undefined;
@@ -28,37 +25,18 @@ export async function taskRoutes(app: FastifyInstance) {
       return;
     }
 
-    let fileBuffer: Buffer | undefined;
-    let fileMimetype: string | undefined;
-
-    if (data) {
-      const chunks: Buffer[] = [];
-      for await (const chunk of data.file) {
-        chunks.push(chunk);
-      }
-      fileBuffer = Buffer.concat(chunks);
-      fileMimetype = data.mimetype;
-    }
-
-    if (!inputUrl && !fileBuffer) {
-      reply.status(400).send({ code: 400, data: null, message: "file or input_url is required" });
+    if (!inputUrl) {
+      reply.status(400).send({ code: 400, data: null, message: "input_url is required" });
       return;
     }
 
-    const resolvedType = await resolveInputType(
-      { url: inputUrl, file: fileBuffer ? { buffer: fileBuffer, mimetype: fileMimetype } : undefined },
-      inputType
-    );
-
-    const inputData = inputUrl
-      ? { url: inputUrl }
-      : { filePath: "uploaded", mimeType: fileMimetype, size: fileBuffer?.length };
+    const resolvedType = await resolveInputType(inputUrl, inputType);
 
     const task = await createTask({
       userId,
       sessionId,
       inputType: resolvedType,
-      inputData,
+      inputData: { url: inputUrl },
       model,
       prompt,
       syncRequest: sync,

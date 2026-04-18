@@ -56,7 +56,7 @@ function extractFrame(videoPath: string, outputPath: string, timestamp: number):
         folder: path.dirname(outputPath),
         size: "1280x720",
       })
-      .on("end", resolve)
+      .on("end", () => resolve())
       .on("error", reject);
   });
 }

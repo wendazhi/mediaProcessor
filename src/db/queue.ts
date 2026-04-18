@@ -1,31 +1,38 @@
-import { eq, sql, and, lte, isNull } from "drizzle-orm";
+import { eq, sql, and, or, lte, isNull, asc } from "drizzle-orm";
 import { db } from "./client.js";
 import { tasks, type Task } from "./schema.js";
 
 export async function claimTask(): Promise<Task | undefined> {
-  const result = await db.execute<Task[]>(sql`
-    WITH claimed AS (
-      SELECT id
-      FROM ${tasks}
-      WHERE status = 'pending'
-        AND (${isNull(tasks.nextRetryAt)} OR ${lte(tasks.nextRetryAt, sql`NOW()`)})
-      ORDER BY created_at ASC
-      FOR UPDATE SKIP LOCKED
-      LIMIT 1
-    )
-    UPDATE ${tasks}
-    SET status = 'processing', updated_at = NOW()
-    FROM claimed
-    WHERE ${tasks.id} = claimed.id
-    RETURNING ${tasks}.*
-  `);
+  return await db.transaction(async (tx) => {
+    // Step 1: Select pending task with FOR UPDATE SKIP LOCKED
+    const [task] = await tx
+      .select()
+      .from(tasks)
+      .where(
+        and(
+          eq(tasks.status, "pending"),
+          or(isNull(tasks.nextRetryAt), lte(tasks.nextRetryAt, sql`NOW()`))
+        )
+      )
+      .orderBy(asc(tasks.createdAt))
+      .for("update", { skipLocked: true })
+      .limit(1);
 
-  return result.rows[0];
+    if (!task) return undefined;
+
+    // Step 2: Update status to processing
+    await tx
+      .update(tasks)
+      .set({ status: "processing", updatedAt: new Date() })
+      .where(eq(tasks.id, task.id));
+
+    return task;
+  });
 }
 
 export async function completeTask(
   taskId: string,
-  result: Record<string, unknown>
+  result: object
 ): Promise<void> {
   await db
     .update(tasks)
@@ -78,3 +85,4 @@ export async function resetStaleTasks(timeoutMinutes: number = 5): Promise<void>
       AND updated_at < NOW() - INTERVAL '${sql.raw(String(timeoutMinutes))} minutes'
   `);
 }
+

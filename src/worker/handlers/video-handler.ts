@@ -8,26 +8,20 @@ import path from "path";
 import os from "os";
 
 export async function handleVideo(task: Task): Promise<ProcessResult> {
-  const inputData = task.inputData as { url?: string; filePath?: string };
+  const inputData = task.inputData as { url: string };
   const adapter = getAdapter(task.model);
 
   if (!adapter) {
     throw new Error(`Model adapter not found: ${task.model}`);
   }
 
-  let videoPath: string;
-
-  if (inputData.url) {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "video-dl-"));
-    videoPath = path.join(tempDir, "video.mp4");
-    const response = await axios.get(inputData.url, {
-      responseType: "arraybuffer",
-      timeout: 60000,
-    });
-    await fs.writeFile(videoPath, Buffer.from(response.data));
-  } else {
-    throw new Error("File upload processing not yet implemented");
-  }
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "video-dl-"));
+  const videoPath = path.join(tempDir, "video.mp4");
+  const response = await axios.get(inputData.url, {
+    responseType: "arraybuffer",
+    timeout: 60000,
+  });
+  await fs.writeFile(videoPath, Buffer.from(response.data));
 
   try {
     const frames = await extractVideoFrames(videoPath);

@@ -1,24 +1,6 @@
 import { InputType } from "../types/index.js";
 import axios from "axios";
 
-const IMAGE_MAGIC = [
-  { bytes: [0xff, 0xd8], type: "image" as InputType },
-  { bytes: [0x89, 0x50], type: "image" as InputType },
-  { bytes: [0x47, 0x49], type: "image" as InputType },
-  { bytes: [0x52, 0x49], type: "image" as InputType },
-];
-
-const VIDEO_MAGIC = [
-  { bytes: [0x66, 0x74], type: "video" as InputType },
-  { bytes: [0x00, 0x00], type: "video" as InputType },
-];
-
-const AUDIO_MAGIC = [
-  { bytes: [0x49, 0x44], type: "audio" as InputType },
-  { bytes: [0x66, 0x4c], type: "audio" as InputType },
-  { bytes: [0x52, 0x49], type: "audio" as InputType },
-];
-
 const URL_TYPE_MAP: Record<string, InputType> = {
   ".jpg": "image",
   ".jpeg": "image",
@@ -35,7 +17,7 @@ const URL_TYPE_MAP: Record<string, InputType> = {
 };
 
 export async function resolveInputType(
-  input: { url?: string; file?: { buffer: Buffer; mimetype?: string } },
+  url: string,
   explicitType?: string
 ): Promise<InputType> {
   if (explicitType) {
@@ -45,15 +27,17 @@ export async function resolveInputType(
     throw new Error(`Unsupported input_type: ${explicitType}`);
   }
 
-  if (input.url) {
-    return await resolveUrlType(input.url);
+  // Handle base64 data URI
+  if (url.startsWith("data:")) {
+    const mimeMatch = url.match(/^data:([^;]+);/);
+    const mime = mimeMatch?.[1] || "";
+    if (mime.startsWith("image/")) return "image";
+    if (mime.startsWith("video/")) return "video";
+    if (mime.startsWith("audio/")) return "audio";
+    throw new Error(`Cannot resolve type for data URI: ${mime}`);
   }
 
-  if (input.file) {
-    return resolveFileType(input.file.buffer, input.file.mimetype);
-  }
-
-  throw new Error("No input provided");
+  return await resolveUrlType(url);
 }
 
 async function resolveUrlType(url: string): Promise<InputType> {
@@ -82,34 +66,4 @@ async function resolveUrlType(url: string): Promise<InputType> {
   }
 
   throw new Error(`Cannot resolve type for URL: ${url}`);
-}
-
-function resolveFileType(buffer: Buffer, mimetype?: string): InputType {
-  if (mimetype) {
-    if (mimetype.startsWith("image/")) return "image";
-    if (mimetype.startsWith("video/")) return "video";
-    if (mimetype.startsWith("audio/")) return "audio";
-  }
-
-  const header = Array.from(buffer.slice(0, 16));
-
-  for (const magic of IMAGE_MAGIC) {
-    if (header[0] === magic.bytes[0] && header[1] === magic.bytes[1]) {
-      return magic.type;
-    }
-  }
-
-  for (const magic of VIDEO_MAGIC) {
-    if (header[0] === magic.bytes[0] && header[1] === magic.bytes[1]) {
-      return magic.type;
-    }
-  }
-
-  for (const magic of AUDIO_MAGIC) {
-    if (header[0] === magic.bytes[0] && header[1] === magic.bytes[1]) {
-      return magic.type;
-    }
-  }
-
-  throw new Error("Cannot resolve file type from magic bytes");
 }
