@@ -9,8 +9,12 @@ import { sseRoutes } from "./routes/sse.js";
 import { listenTaskChanges } from "../db/notify.js";
 import { pushSSE } from "../core/sse-manager.js";
 import { resolveWaiter } from "../core/sync-waiter.js";
+import { initModelAdapters } from "../model/init.js";
 
 export async function buildServer() {
+  // Initialize model adapters
+  initModelAdapters();
+
   const app = Fastify({
     logger: true,
     bodyLimit: config.maxFileSize,

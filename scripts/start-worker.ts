@@ -1,4 +1,7 @@
 import { startWorker } from "../src/worker/worker.js";
+import { initModelAdapters } from "../src/model/init.js";
+
+initModelAdapters();
 
 process.on("SIGINT", () => {
   console.log("Shutting down worker...");
