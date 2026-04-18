@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { createTask, getTaskById, listTasks } from "../../core/task-service.js";
+import { registerWaiter } from "../../core/sync-waiter.js";
 import { resolveInputType } from "../../core/type-resolver.js";
 import { config } from "../../config/index.js";
 
@@ -62,12 +63,43 @@ export async function taskRoutes(app: FastifyInstance) {
     });
 
     if (sync) {
-      // TODO: Implement synchronous wait for result
-      reply.status(200).send({
-        code: 200,
-        data: { ...task, message: "Sync mode not yet implemented, use task_id to query" },
-        message: "success",
-      });
+      try {
+        const completedTask = await Promise.race([
+          registerWaiter(task.id),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("timeout")), timeout * 1000)
+          ),
+        ]);
+
+        reply.status(200).send({
+          code: 200,
+          data: {
+            task_id: completedTask.id,
+            user_id: completedTask.userId,
+            session_id: completedTask.sessionId,
+            status: completedTask.status,
+            input_type: completedTask.inputType,
+            model: completedTask.model,
+            result: completedTask.result,
+            created_at: completedTask.createdAt,
+            completed_at: completedTask.updatedAt,
+          },
+          message: "success",
+        });
+      } catch {
+        reply.status(200).send({
+          code: 200,
+          data: {
+            task_id: task.id,
+            user_id: task.userId,
+            session_id: task.sessionId,
+            status: "processing",
+            message: "Task is still processing, use task_id to query later",
+            created_at: task.createdAt,
+          },
+          message: "success",
+        });
+      }
       return;
     }
 
