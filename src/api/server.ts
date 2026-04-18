@@ -6,6 +6,9 @@ import { authMiddleware } from "./middleware/auth.js";
 import { taskRoutes } from "./routes/tasks.js";
 import { modelRoutes } from "./routes/models.js";
 import { sseRoutes } from "./routes/sse.js";
+import { listenTaskChanges } from "../db/notify.js";
+import { pushSSE } from "../core/sse-manager.js";
+import { resolveWaiter } from "../core/sync-waiter.js";
 
 export async function buildServer() {
   const app = Fastify({
@@ -34,4 +37,9 @@ export async function startServer() {
   const app = await buildServer();
   await app.listen({ port: config.port, host: "0.0.0.0" });
   console.log(`Server listening on port ${config.port}`);
+
+  await listenTaskChanges((payload) => {
+    pushSSE(payload.task_id, payload.status, payload);
+    resolveWaiter(payload.task_id);
+  });
 }

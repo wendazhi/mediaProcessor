@@ -2,6 +2,7 @@ import { claimTask, completeTask, failTask, resetStaleTasks } from "../db/queue.
 import { dispatchTask } from "./task-dispatcher.js";
 import { config } from "../config/index.js";
 import { pushSSE } from "../core/sse-manager.js";
+import { notifyTaskChange } from "../db/notify.js";
 
 let running = true;
 
@@ -25,6 +26,7 @@ export async function startWorker(): Promise<void> {
       try {
         const result = await dispatchTask(task);
         await completeTask(task.id, result);
+        await notifyTaskChange(task.id, "completed");
         pushSSE(task.id, "completed", {
           task_id: task.id,
           status: "completed",
@@ -35,6 +37,7 @@ export async function startWorker(): Promise<void> {
         const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(`Task failed: ${task.id}, error: ${errorMessage}`);
         await failTask(task.id, errorMessage);
+        await notifyTaskChange(task.id, "failed");
         pushSSE(task.id, "failed", {
           task_id: task.id,
           status: "failed",
