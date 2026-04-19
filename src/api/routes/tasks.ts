@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { createTask, getTaskById, listTasks } from "../../core/task-service.js";
 import { registerWaiter } from "../../core/sync-waiter.js";
 import { resolveInputType } from "../../core/type-resolver.js";
+import { extractUrl } from "../../core/url-extractor.js";
 import { config } from "../../config/index.js";
 
 export async function taskRoutes(app: FastifyInstance) {
@@ -30,13 +31,24 @@ export async function taskRoutes(app: FastifyInstance) {
       return;
     }
 
-    const resolvedType = await resolveInputType(inputUrl, inputType);
+    // 从分享文案中提取真正的 URL（如抖音/小红书分享文本）
+    let cleanUrl = inputUrl.trim();
+    if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://") && !cleanUrl.startsWith("data:")) {
+      const extracted = extractUrl(cleanUrl);
+      if (!extracted) {
+        reply.status(400).send({ code: 400, data: null, message: "No valid URL found in input_url" });
+        return;
+      }
+      cleanUrl = extracted;
+    }
+
+    const resolvedType = await resolveInputType(cleanUrl, inputType);
 
     const task = await createTask({
       userId,
       sessionId,
       inputType: resolvedType,
-      inputData: { url: inputUrl },
+      inputData: { url: cleanUrl },
       model,
       prompt,
       syncRequest: sync,
