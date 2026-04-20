@@ -4,7 +4,7 @@ import * as cheerio from "cheerio";
 
 const SOCIAL_DOMAINS = new Set([
   "douyin.com", "iesdouyin.com", "v.douyin.com",
-  "xiaohongshu.com", "xhs.link",
+  "xiaohongshu.com", "xhs.link", "xhslink.com",
   "weibo.com", "weibo.cn",
   "bilibili.com", "b23.tv",
   "youtube.com", "youtu.be",
